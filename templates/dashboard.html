@@ -1,0 +1,131 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Patient Dashboard - Centralized Medical Record System</title>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+      font-family: Arial, sans-serif;
+    }
+
+    body {
+      background: #f4f4f4;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+    }
+
+    /* Top Bar */
+    .top-bar {
+      width: 100%;
+      background: #2c3e50;
+      color: white;
+      padding: 1rem;
+      text-align: center;
+      font-size: 1.5rem;
+      box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+    }
+
+    /* Main Grid Layout */
+    .container {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+      gap: 1.5rem;
+      padding: 2rem;
+      max-width: 1200px;
+      width: 100%;
+    }
+
+    .card {
+      background: white;
+      padding: 1.5rem;
+      border-radius: 10px;
+      box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+      transition: transform 0.3s ease-in-out;
+    }
+
+    .card:hover {
+      transform: scale(1.05);
+    }
+
+    h2 {
+      margin-bottom: 1rem;
+      color: #2c3e50;
+    }
+
+    .profile-img {
+      width: 80px;
+      height: 80px;
+      border-radius: 50%;
+      margin-bottom: 1rem;
+    }
+
+    .button {
+      padding: 0.5rem;
+      background: #4CAF50;
+      color: white;
+      border: none;
+      border-radius: 5px;
+      cursor: pointer;
+      transition: background 0.3s;
+    }
+
+    .button:hover {
+      background: #388E3C;
+    }
+
+    input, textarea, select {
+      width: 100%;
+      padding: 0.5rem;
+      margin: 0.5rem 0;
+      border: 1px solid #ccc;
+      border-radius: 5px;
+    }
+  </style>
+</head>
+<body>
+
+  <div class="top-bar">Welcome, {{ user.username }}!</div>
+
+  <div class="container">
+    <div class="card" style="text-align: center;">
+      <h2>Profile</h2>
+      <img src="https://th.bing.com/th/id/OIP.tvaMwK3QuFxhTYg4PSNNVAHaHa?rs=1&pid=ImgDetMain" alt="Profile" class="profile-img">
+      <p>Name: <strong>{{ user.username }}</strong></p>
+      <p>Patient ID: <strong>{{ user.id }}</strong></p>
+    </div>
+
+    <div class="card">
+      <h2>Medical History</h2>
+      <p>Prescriptions: None</p>
+      <p>Allergies: None</p>
+    </div>
+
+    <div class="card">
+      <h2>Appointments</h2>
+      <p>No upcoming appointments</p>
+    </div>
+
+    <div class="card">
+      <h2>Upload Medical Records</h2>
+      <input type="file">
+      <button class="button">Upload</button>
+    </div>
+
+    <div class="card" style="grid-column: 1 / -1;">
+      <h2>Operation / Treatment Info</h2>
+      <input type="text" placeholder="Doctor Name">
+      <input type="text" placeholder="Hospital Name">
+      <input type="text" placeholder="Operation Name">
+      <input type="date">
+      <textarea placeholder="Description" rows="3"></textarea>
+      <button class="button">Submit</button>
+    </div>
+  </div>
+
+</body>
+</html>

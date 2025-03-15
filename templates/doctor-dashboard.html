@@ -1,0 +1,144 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Doctor's Dashboard</title>
+</head>
+<body style="margin:0; padding:0; font-family:Arial, sans-serif; background:#f4f4f4;">
+
+  <!-- Top Bar / Welcome Message -->
+  <div style="
+    background-color:#ffffff;
+    padding:1rem;
+    box-shadow:0 0 10px rgba(0,0,0,0.1);
+    display:flex;
+    justify-content:space-between;
+    align-items:center;
+  ">
+    <h1 id="doctorWelcome" style="margin:0; font-size:1.5rem;">
+      Welcome, Doctor
+    </h1>
+  </div>
+
+  <!-- Main Container -->
+  <div style="
+    max-width:1200px;
+    margin:1rem auto;
+    background-color:#fff;
+    padding:1.5rem;
+    border-radius:8px;
+    box-shadow:0 0 10px rgba(0,0,0,0.1);
+  ">
+
+    <!-- Search Patient by ID -->
+    <section>
+      <h2>Search Patient</h2>
+      <form id="searchPatientForm" style="display:flex; gap:1rem; align-items:flex-end;">
+        <div style="flex:1;">
+          <label for="searchPatientId" style="display:block; margin-bottom:0.3rem;">Patient ID:</label>
+          <input type="text" id="searchPatientId" required
+                 style="width:100%; padding:0.5rem; border:1px solid #ccc; border-radius:4px;">
+        </div>
+        <button type="submit" style="
+          padding:0.5rem 1rem;
+          background-color:#4CAF50;
+          color:#fff;
+          border:none;
+          border-radius:4px;
+          cursor:pointer;
+          font-weight:bold;
+        " onmouseover="this.style.backgroundColor='#388E3C'" onmouseout="this.style.backgroundColor='#4CAF50'">
+          Search
+        </button>
+      </form>
+      <div id="searchMessage" style="margin-top:1rem; color:#555;"></div>
+    </section>
+
+    <!-- Patient Details & Medical Reports (hidden until search is successful) -->
+    <section id="patientSection" style="display:none; margin-top:2rem;">
+      <h2>Patient Details</h2>
+
+      <!-- Basic Patient Info -->
+      <form id="patientDetailsForm" style="display:grid; grid-template-columns:1fr 1fr; gap:1rem;">
+        <div>
+          <label for="patientName">Patient Name:</label>
+          <input type="text" id="patientName" style="width:100%; padding:0.5rem; border:1px solid #ccc; border-radius:4px;">
+
+          <label for="patientAge" style="margin-top:1rem;">Age of Patient:</label>
+          <input type="number" id="patientAge" style="width:100%; padding:0.5rem; border:1px solid #ccc; border-radius:4px;">
+
+          <label for="patientDisease" style="margin-top:1rem;">Disease(s):</label>
+          <input type="text" id="patientDisease" placeholder="e.g., Diabetes, Hypertension"
+                 style="width:100%; padding:0.5rem; border:1px solid #ccc; border-radius:4px;">
+        </div>
+
+        <div>
+          <label for="patientIdField">Patient ID:</label>
+          <input type="text" id="patientIdField" disabled
+                 style="width:100%; padding:0.5rem; border:1px solid #ccc; border-radius:4px; background:#eee;">
+
+          <label for="notes" style="margin-top:1rem;">Notes / List of Issues:</label>
+          <textarea id="notes" rows="5"
+                    style="width:100%; padding:0.5rem; border:1px solid #ccc; border-radius:4px;"></textarea>
+        </div>
+      </form>
+
+      <!-- Medical Reports / Operation / Treatment Info -->
+      <h2 style="margin-top:2rem;">Medical Reports / Operation / Treatment Info</h2>
+      <form id="reportsForm" style="display:grid; grid-template-columns:1fr 1fr; gap:1rem;">
+        <div>
+          <label for="hospitalName">Hospital Name:</label>
+          <select id="hospitalName" style="width:100%; padding:0.5rem; border:1px solid #ccc; border-radius:4px;">
+            <option value="">Select Hospital</option>
+            <option value="Hospital A">Hospital A</option>
+            <option value="Hospital B">Hospital B</option>
+            <option value="Hospital C">Hospital C</option>
+          </select>
+
+          <label for="diseaseType" style="margin-top:1rem;">Selecting Type of Disease:</label>
+          <select id="diseaseType" style="width:100%; padding:0.5rem; border:1px solid #ccc; border-radius:4px;">
+            <option value="">Select Disease</option>
+            <option value="Disease X">Disease X</option>
+            <option value="Disease Y">Disease Y</option>
+            <option value="Disease Z">Disease Z</option>
+          </select>
+
+          <label for="operationName" style="margin-top:1rem;">Operation/Treatment Name:</label>
+          <input type="text" id="operationName" style="width:100%; padding:0.5rem; border:1px solid #ccc; border-radius:4px;">
+        </div>
+
+        <div>
+          <label for="dateOfOperation">Date of Operation:</label>
+          <input type="date" id="dateOfOperation" style="width:100%; padding:0.5rem; border:1px solid #ccc; border-radius:4px;">
+
+          <label for="prescriptionUpload" style="margin-top:1rem;">Prescription Upload:</label>
+          <input type="file" id="prescriptionUpload" style="width:100%; padding:0.3rem; border:1px solid #ccc; border-radius:4px;">
+
+          <label for="reportNotes" style="margin-top:1rem;">Additional Info:</label>
+          <textarea id="reportNotes" rows="3" style="width:100%; padding:0.5rem; border:1px solid #ccc; border-radius:4px;"></textarea>
+        </div>
+      </form>
+
+      <div style="margin-top:1rem;">
+        <button id="updateDetailsBtn" style="
+          padding:0.5rem 1rem;
+          background-color:#4CAF50;
+          color:#fff;
+          border:none;
+          border-radius:4px;
+          cursor:pointer;
+          font-weight:bold;
+        " onmouseover="this.style.backgroundColor='#388E3C'" onmouseout="this.style.backgroundColor='#4CAF50'">
+          Update Details
+        </button>
+      </div>
+
+      <div id="updateMessage" style="margin-top:1rem; color:#555;"></div>
+    </section>
+
+  </div>
+
+  <script src="js/scripts.js"></script>
+</body>
+</html>
