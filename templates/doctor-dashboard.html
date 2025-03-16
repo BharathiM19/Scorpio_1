@@ -4,134 +4,179 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Doctor's Dashboard</title>
+  <style>
+    body {
+      margin: 0;
+      padding: 0;
+      font-family: Arial, sans-serif;
+      background: #f4f4f4;
+    }
+
+    .container {
+      max-width: 1200px;
+      margin: 1rem auto;
+      background-color: #fff;
+      padding: 1.5rem;
+      border-radius: 8px;
+      box-shadow: 0 0 10px rgba(0,0,0,0.1);
+    }
+
+    .top-bar {
+      background-color: #ffffff;
+      padding: 1rem;
+      box-shadow: 0 0 10px rgba(0,0,0,0.1);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .form-group {
+      margin-bottom: 1rem;
+    }
+
+    label {
+      display: block;
+      font-weight: bold;
+      margin-bottom: 0.3rem;
+    }
+
+    input, select, textarea {
+      width: 100%;
+      padding: 0.5rem;
+      border: 1px solid #ccc;
+      border-radius: 4px;
+    }
+
+    button {
+      padding: 0.5rem 1rem;
+      background-color: #4CAF50;
+      color: #fff;
+      border: none;
+      border-radius: 4px;
+      cursor: pointer;
+      font-weight: bold;
+      transition: 0.3s;
+    }
+
+    button:hover {
+      background-color: #388E3C;
+    }
+
+    .hidden {
+      display: none;
+    }
+  </style>
 </head>
-<body style="margin:0; padding:0; font-family:Arial, sans-serif; background:#f4f4f4;">
+<body>
 
   <!-- Top Bar / Welcome Message -->
-  <div style="
-    background-color:#ffffff;
-    padding:1rem;
-    box-shadow:0 0 10px rgba(0,0,0,0.1);
-    display:flex;
-    justify-content:space-between;
-    align-items:center;
-  ">
-    <h1 id="doctorWelcome" style="margin:0; font-size:1.5rem;">
-      Welcome, Doctor
-    </h1>
+  <div class="top-bar">
+    <h1 id="doctorWelcome">Welcome, Dr. {{ user.username }}</h1>
+    <p><strong>Doctor ID:</strong> {{ user.doctor_id }}</p>
   </div>
 
   <!-- Main Container -->
-  <div style="
-    max-width:1200px;
-    margin:1rem auto;
-    background-color:#fff;
-    padding:1.5rem;
-    border-radius:8px;
-    box-shadow:0 0 10px rgba(0,0,0,0.1);
-  ">
+  <div class="container">
 
     <!-- Search Patient by ID -->
     <section>
       <h2>Search Patient</h2>
       <form id="searchPatientForm" style="display:flex; gap:1rem; align-items:flex-end;">
         <div style="flex:1;">
-          <label for="searchPatientId" style="display:block; margin-bottom:0.3rem;">Patient ID:</label>
-          <input type="text" id="searchPatientId" required
-                 style="width:100%; padding:0.5rem; border:1px solid #ccc; border-radius:4px;">
+          <label for="searchPatientId">Patient ID:</label>
+          <input type="text" id="searchPatientId" required>
         </div>
-        <button type="submit" style="
-          padding:0.5rem 1rem;
-          background-color:#4CAF50;
-          color:#fff;
-          border:none;
-          border-radius:4px;
-          cursor:pointer;
-          font-weight:bold;
-        " onmouseover="this.style.backgroundColor='#388E3C'" onmouseout="this.style.backgroundColor='#4CAF50'">
-          Search
-        </button>
+        <button type="submit">Search</button>
       </form>
       <div id="searchMessage" style="margin-top:1rem; color:#555;"></div>
     </section>
 
-    <!-- Patient Details & Medical Reports (hidden until search is successful) -->
-    <section id="patientSection" style="display:none; margin-top:2rem;">
+    <!-- Patient Details & Medical Reports -->
+    <section id="patientSection" class="hidden">
       <h2>Patient Details</h2>
 
       <!-- Basic Patient Info -->
       <form id="patientDetailsForm" style="display:grid; grid-template-columns:1fr 1fr; gap:1rem;">
         <div>
-          <label for="patientName">Patient Name:</label>
-          <input type="text" id="patientName" style="width:100%; padding:0.5rem; border:1px solid #ccc; border-radius:4px;">
+          <div class="form-group">
+            <label for="patientName">Patient Name:</label>
+            <input type="text" id="patientName">
+          </div>
 
-          <label for="patientAge" style="margin-top:1rem;">Age of Patient:</label>
-          <input type="number" id="patientAge" style="width:100%; padding:0.5rem; border:1px solid #ccc; border-radius:4px;">
+          <div class="form-group">
+            <label for="patientAge">Age:</label>
+            <input type="number" id="patientAge">
+          </div>
 
-          <label for="patientDisease" style="margin-top:1rem;">Disease(s):</label>
-          <input type="text" id="patientDisease" placeholder="e.g., Diabetes, Hypertension"
-                 style="width:100%; padding:0.5rem; border:1px solid #ccc; border-radius:4px;">
+          <div class="form-group">
+            <label for="patientDisease">Disease(s):</label>
+            <input type="text" id="patientDisease" placeholder="e.g., Diabetes, Hypertension">
+          </div>
         </div>
 
         <div>
-          <label for="patientIdField">Patient ID:</label>
-          <input type="text" id="patientIdField" disabled
-                 style="width:100%; padding:0.5rem; border:1px solid #ccc; border-radius:4px; background:#eee;">
+          <div class="form-group">
+            <label for="patientIdField">Patient ID:</label>
+            <input type="text" id="patientIdField" disabled style="background:#eee;">
+          </div>
 
-          <label for="notes" style="margin-top:1rem;">Notes / List of Issues:</label>
-          <textarea id="notes" rows="5"
-                    style="width:100%; padding:0.5rem; border:1px solid #ccc; border-radius:4px;"></textarea>
+          <div class="form-group">
+            <label for="notes">Notes / Issues:</label>
+            <textarea id="notes" rows="5"></textarea>
+          </div>
         </div>
       </form>
 
       <!-- Medical Reports / Operation / Treatment Info -->
-      <h2 style="margin-top:2rem;">Medical Reports / Operation / Treatment Info</h2>
+      <h2 style="margin-top:2rem;">Medical Reports & Treatment</h2>
       <form id="reportsForm" style="display:grid; grid-template-columns:1fr 1fr; gap:1rem;">
         <div>
-          <label for="hospitalName">Hospital Name:</label>
-          <select id="hospitalName" style="width:100%; padding:0.5rem; border:1px solid #ccc; border-radius:4px;">
-            <option value="">Select Hospital</option>
-            <option value="Hospital A">Hospital A</option>
-            <option value="Hospital B">Hospital B</option>
-            <option value="Hospital C">Hospital C</option>
-          </select>
+          <div class="form-group">
+            <label for="hospitalName">Hospital Name:</label>
+            <select id="hospitalName">
+              <option value="">Select Hospital</option>
+              <option value="Hospital A">Hospital A</option>
+              <option value="Hospital B">Hospital B</option>
+              <option value="Hospital C">Hospital C</option>
+            </select>
+          </div>
 
-          <label for="diseaseType" style="margin-top:1rem;">Selecting Type of Disease:</label>
-          <select id="diseaseType" style="width:100%; padding:0.5rem; border:1px solid #ccc; border-radius:4px;">
-            <option value="">Select Disease</option>
-            <option value="Disease X">Disease X</option>
-            <option value="Disease Y">Disease Y</option>
-            <option value="Disease Z">Disease Z</option>
-          </select>
+          <div class="form-group">
+            <label for="diseaseType">Disease Type:</label>
+            <select id="diseaseType">
+              <option value="">Select Disease</option>
+              <option value="Disease X">Disease X</option>
+              <option value="Disease Y">Disease Y</option>
+              <option value="Disease Z">Disease Z</option>
+            </select>
+          </div>
 
-          <label for="operationName" style="margin-top:1rem;">Operation/Treatment Name:</label>
-          <input type="text" id="operationName" style="width:100%; padding:0.5rem; border:1px solid #ccc; border-radius:4px;">
+          <div class="form-group">
+            <label for="operationName">Operation/Treatment Name:</label>
+            <input type="text" id="operationName">
+          </div>
         </div>
 
         <div>
-          <label for="dateOfOperation">Date of Operation:</label>
-          <input type="date" id="dateOfOperation" style="width:100%; padding:0.5rem; border:1px solid #ccc; border-radius:4px;">
+          <div class="form-group">
+            <label for="dateOfOperation">Date of Operation:</label>
+            <input type="date" id="dateOfOperation">
+          </div>
 
-          <label for="prescriptionUpload" style="margin-top:1rem;">Prescription Upload:</label>
-          <input type="file" id="prescriptionUpload" style="width:100%; padding:0.3rem; border:1px solid #ccc; border-radius:4px;">
+          <div class="form-group">
+            <label for="prescriptionUpload">Prescription Upload:</label>
+            <input type="file" id="prescriptionUpload">
+          </div>
 
-          <label for="reportNotes" style="margin-top:1rem;">Additional Info:</label>
-          <textarea id="reportNotes" rows="3" style="width:100%; padding:0.5rem; border:1px solid #ccc; border-radius:4px;"></textarea>
+          <div class="form-group">
+            <label for="reportNotes">Additional Info:</label>
+            <textarea id="reportNotes" rows="3"></textarea>
+          </div>
         </div>
       </form>
 
       <div style="margin-top:1rem;">
-        <button id="updateDetailsBtn" style="
-          padding:0.5rem 1rem;
-          background-color:#4CAF50;
-          color:#fff;
-          border:none;
-          border-radius:4px;
-          cursor:pointer;
-          font-weight:bold;
-        " onmouseover="this.style.backgroundColor='#388E3C'" onmouseout="this.style.backgroundColor='#4CAF50'">
-          Update Details
-        </button>
+        <button id="updateDetailsBtn">Update Details</button>
       </div>
 
       <div id="updateMessage" style="margin-top:1rem; color:#555;"></div>
@@ -139,6 +184,28 @@
 
   </div>
 
-  <script src="js/scripts.js"></script>
+  <script>
+    document.getElementById("searchPatientForm").addEventListener("submit", function(event) {
+      event.preventDefault();
+      let patientId = document.getElementById("searchPatientId").value.trim();
+      
+      if (patientId === "P1234") { // Example ID for testing
+        document.getElementById("patientSection").style.display = "block";
+        document.getElementById("searchMessage").innerHTML = "<span style='color: green;'>Patient found!</span>";
+        document.getElementById("patientIdField").value = patientId;
+        document.getElementById("patientName").value = "John Doe";
+        document.getElementById("patientAge").value = "35";
+        document.getElementById("patientDisease").value = "Hypertension";
+      } else {
+        document.getElementById("searchMessage").innerHTML = "<span style='color: red;'>Patient not found!</span>";
+        document.getElementById("patientSection").style.display = "none";
+      }
+    });
+
+    document.getElementById("updateDetailsBtn").addEventListener("click", function() {
+      document.getElementById("updateMessage").innerHTML = "<span style='color: green;'>Patient details updated successfully!</span>";
+    });
+  </script>
+
 </body>
 </html>

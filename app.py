@@ -19,7 +19,7 @@ def get_db_connection():
         return conn
     except mysql.connector.Error as e:
         print(f"Database Connection Error: {e}")
-        return None  # Avoids breaking the app if DB connection fails
+        return None
 
 bcrypt = Bcrypt(app)
 
@@ -28,12 +28,16 @@ login_manager = LoginManager()
 login_manager.init_app(app)
 login_manager.login_view = "login"
 
-# 🟢 User Model (For Flask-Login)
+# 🟢 User Model
 class User(UserMixin):
-    def __init__(self, id, username, role):
+    def __init__(self, id, username, role, doctor_id=None):
         self.id = id
         self.username = username
         self.role = role
+        self.doctor_id = doctor_id  # Only for doctors
+
+    def get_id(self):
+        return str(self.id)
 
 @login_manager.user_loader
 def load_user(user_id):
@@ -44,7 +48,7 @@ def load_user(user_id):
         user = cursor.fetchone()
         conn.close()
         if user:
-            return User(user["id"], user["username"], user["role"])
+            return User(user["id"], user["username"], user["role"], user.get("doctor_id"))
     return None
 
 # 🟢 Home Route
@@ -56,34 +60,46 @@ def home():
 @app.route('/login', methods=['GET', 'POST'])
 def login():
     if request.method == 'POST':
-        username = request.form['username']
-        password = request.form['password']
+        role = request.form['role'].strip().lower()
 
         conn = get_db_connection()
         if conn:
             cursor = conn.cursor(dictionary=True)
-            cursor.execute("SELECT * FROM users WHERE username = %s", (username,))
-            user = cursor.fetchone()
+
+            if role == "doctor":
+                doctor_id = request.form['doctorId'].strip().upper()
+                print(f"🔵 Doctor trying to login with ID: {doctor_id}")  # Debugging
+
+                cursor.execute("SELECT * FROM users WHERE doctor_id = %s AND role = 'doctor'", (doctor_id,))
+                user = cursor.fetchone()
+
+                if user:
+                    print(f"✅ Found Doctor in DB with ID: {user['doctor_id']}")  # Debugging
+                else:
+                    print(f"❌ No matching doctor ID found in DB!")  # Debugging
+            else:
+                username = request.form['username'].strip().lower()
+                password = request.form['password']
+                cursor.execute("SELECT * FROM users WHERE username = %s AND role = 'patient'", (username,))
+                user = cursor.fetchone()
+
             conn.close()
 
-            if user and bcrypt.check_password_hash(user['password'], password):
-                login_user(User(user['id'], user['username'], user['role']))
-                flash('Login successful!', 'success')
-
-                print(f"User logged in: {user['username']}, Role: {user['role']}")  # Debugging Output
-
-                # ✅ Redirect based on role
-                if user['role'] == 'doctor':
+            if user:
+                if role == "doctor":
+                    login_user(User(user['id'], user['username'], user['role'], user['doctor_id']))
+                    flash(f'Doctor {user["username"]} logged in successfully!', 'success')
                     return redirect(url_for('doctor_dashboard'))
-                elif user['role'] == 'patient':
+                
+                elif role == "patient" and bcrypt.check_password_hash(user['password'], password):
+                    login_user(User(user['id'], user['username'], user['role']))
+                    flash('Patient login successful!', 'success')
                     return redirect(url_for('dashboard'))
+                
                 else:
-                    flash('Invalid role detected!', 'danger')
-                    return redirect(url_for('home'))
+                    flash('Invalid credentials!', 'danger')
             else:
-                flash('Invalid credentials', 'danger')
-        else:
-            flash('Database connection failed!', 'danger')
+                flash('User not found!', 'danger')
 
     return render_template('login.html')
 
@@ -95,32 +111,69 @@ def logout():
     flash('Logged out successfully!', 'success')
     return redirect(url_for('home'))
 
-# 🟢 Registration Route
+# 🟢 Registration Route (Doctors Enter Custom ID)
 @app.route('/register', methods=['GET', 'POST'])
 def register():
     if request.method == 'POST':
-        username = request.form['username']
+        username = request.form['username'].strip()
         password = bcrypt.generate_password_hash(request.form['password']).decode('utf-8')
-        role = request.form['role']  # "patient" or "doctor"
+        role = request.form.get('role').strip().lower()
+
+        if role not in ["doctor", "patient"]:
+            flash('Invalid role selection!', 'danger')
+            return redirect(url_for('register'))
 
         conn = get_db_connection()
         if conn:
-            cursor = conn.cursor()
-            cursor.execute("INSERT INTO users (username, password, role) VALUES (%s, %s, %s)", (username, password, role))
+            cursor = conn.cursor(dictionary=True)
+
+            # 🛑 Print all stored doctor IDs for debugging
+            cursor.execute("SELECT doctor_id FROM users WHERE role = 'doctor'")
+            all_doctors = cursor.fetchall()
+            print(f"🔴 Existing doctor IDs in DB: {[d['doctor_id'] for d in all_doctors]}")  # Debugging
+
+            # 🛑 CHECK IF USERNAME ALREADY EXISTS
+            cursor.execute("SELECT * FROM users WHERE username = %s", (username,))
+            existing_user = cursor.fetchone()
+            if existing_user:
+                flash('Username already exists! Choose a different one.', 'danger')
+                conn.close()
+                return redirect(url_for('register'))
+
+            # ✅ Allow Doctors to Enter Their Own `doctor_id`
+            doctor_id = None
+            if role == "doctor":
+                doctor_id = request.form['doctorId'].strip().upper()  # Ensure uppercase & no spaces
+
+                # Check if doctor_id already exists
+                cursor.execute("SELECT * FROM users WHERE doctor_id = %s", (doctor_id,))
+                existing_doctor = cursor.fetchone()
+                if existing_doctor:
+                    flash('Doctor ID already exists! Choose a different one.', 'danger')
+                    conn.close()
+                    return redirect(url_for('register'))
+
+            # ✅ INSERT NEW USER
+            cursor.execute("""
+                INSERT INTO users (username, password, role, doctor_id) 
+                VALUES (%s, %s, %s, %s)
+            """, (username, password, role, doctor_id))
             conn.commit()
+
+            # ✅ Fetch stored doctor ID again for verification
+            cursor.execute("SELECT doctor_id FROM users WHERE username = %s", (username,))
+            stored_id = cursor.fetchone()["doctor_id"]
+            print(f"🟢 STORED Doctor ID in DB (After Insert): {stored_id}")  # Debugging
+
             conn.close()
-
-            flash('Registration successful! Please log in.', 'success')
-
-            print(f"New user registered: {username}, Role: {role}")  # Debugging Output
-
+            flash('Registration successful! You can now log in.', 'success')
             return redirect(url_for('login'))
         else:
             flash('Database connection failed!', 'danger')
 
     return render_template('register.html')
 
-# 🟢 Patient Dashboard (Now Displays User Info)
+# 🟢 Patient Dashboard
 @app.route('/dashboard')
 @login_required
 def dashboard():
@@ -128,10 +181,9 @@ def dashboard():
         flash('Unauthorized access!', 'danger')
         return redirect(url_for('home'))
 
-    # Pass user details to the dashboard
     return render_template('dashboard.html', user=current_user)
 
-# 🟢 Doctor Dashboard (Now Displays User Info)
+# 🟢 Doctor Dashboard
 @app.route('/doctor-dashboard')
 @login_required
 def doctor_dashboard():
@@ -139,8 +191,7 @@ def doctor_dashboard():
         flash('Unauthorized access!', 'danger')
         return redirect(url_for('home'))
 
-    # Pass user details to the doctor dashboard
-    return render_template('doctor-dashboard.html', user=current_user)
+    return render_template('doctor-dashboard.html', user=current_user, doctor_id=current_user.doctor_id)
 
 if __name__ == '__main__':
     app.run(debug=True)

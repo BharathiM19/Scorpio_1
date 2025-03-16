@@ -50,7 +50,7 @@
       color: #555;
     }
 
-    input {
+    input, select {
       width: 100%;
       padding: 12px;
       margin-top: 5px;
@@ -60,7 +60,7 @@
       transition: 0.3s;
     }
 
-    input:focus {
+    input:focus, select:focus {
       border-color: #4facfe;
       outline: none;
       box-shadow: 0 0 8px rgba(79, 172, 254, 0.4);
@@ -102,6 +102,11 @@
       text-decoration: underline;
     }
 
+    /* Hide Doctor ID Field by Default */
+    #doctorIdField {
+      display: none;
+    }
+
     /* Animation */
     @keyframes fadeIn {
       from {
@@ -120,14 +125,32 @@
   <div class="login-container">
     <h1>Login</h1>
     <form method="POST" action="{{ url_for('login') }}">
+      
+      <!-- Role Selection -->
       <div class="form-group">
+        <label for="role">Login As:</label>
+        <select id="role" name="role" required onchange="toggleLoginFields()">
+          <option value="patient">Patient</option>
+          <option value="doctor">Doctor</option>
+        </select>
+      </div>
+
+      <!-- Username for Patients -->
+      <div class="form-group" id="usernameField">
         <label for="username">Username:</label>
         <input type="text" id="username" name="username" required>
       </div>
 
-      <div class="form-group">
-        <label for="password">AADHAR NO:</label>
-        <input type="password" id="password" name="password" required>
+      <!-- Doctor ID for Doctors (Initially Hidden) -->
+      <div class="form-group" id="doctorIdField" style="display: none;">
+        <label for="doctorId">Doctor ID:</label>
+        <input type="text" id="doctorId" name="doctorId">
+      </div>
+
+      <!-- Password (for Patients Only) -->
+      <div class="form-group" id="passwordField">
+        <label for="password">Aadhar Number (Patients Only):</label>
+        <input type="password" id="password" name="password">
       </div>
 
       <button type="submit" class="login-btn">Login</button>
@@ -137,6 +160,15 @@
       Don't have an account? <a href="{{ url_for('register') }}">Register here</a>
     </p>
   </div>
+
+  <script>
+    function toggleLoginFields() {
+      var role = document.getElementById("role").value;
+      document.getElementById("usernameField").style.display = role === "doctor" ? "none" : "block";
+      document.getElementById("doctorIdField").style.display = role === "doctor" ? "block" : "none";
+      document.getElementById("passwordField").style.display = role === "doctor" ? "none" : "block";
+    }
+  </script>
 
 </body>
 </html>

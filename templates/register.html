@@ -66,6 +66,16 @@
       box-shadow: 0 0 8px rgba(255, 107, 107, 0.4);
     }
 
+    /* Doctor ID Field (Initially Hidden) */
+    #doctorIdField {
+      display: none;
+    }
+
+    input[readonly] {
+      background-color: #eee;
+      cursor: not-allowed;
+    }
+
     /* Register Button */
     .register-btn {
       background: linear-gradient(135deg, #FF6B6B, #556270);
@@ -120,24 +130,35 @@
   <div class="register-container">
     <h1>Register</h1>
     <form id="register-form" method="POST" action="{{ url_for('register') }}">
+      
+      <!-- Username Field -->
       <div class="form-group">
         <label for="username">Username:</label>
         <input type="text" id="username" name="username" required>
       </div>
 
+      <!-- Aadhar Number Field -->
       <div class="form-group">
         <label for="password">AADHAR NUMBER:</label>
         <input type="password" id="password" name="password" required>
       </div>
 
+      <!-- Role Selection -->
       <div class="form-group">
         <label for="role">Role:</label>
-        <select id="role" name="role" required>
+        <select id="role" name="role" required onchange="toggleDoctorIdField()">
           <option value="patient">Patient</option>
           <option value="doctor">Doctor</option>
         </select>
       </div>
 
+      <!-- Doctor ID Field (Hidden by Default) -->
+      <div class="form-group" id="doctorIdField">
+        <label for="doctorId">Doctor ID:</label>
+        <input type="text" id="doctorId" name="doctorId" readonly placeholder="Generated automatically">
+      </div>
+
+      <!-- Register Button -->
       <button type="submit" class="register-btn">Register</button>
     </form>
 
@@ -145,6 +166,26 @@
       Already have an account? <a href="{{ url_for('login') }}">Login here</a>
     </p>
   </div>
+
+  <script>
+    function toggleDoctorIdField() {
+      var role = document.getElementById("role").value;
+      var doctorIdField = document.getElementById("doctorIdField");
+      var doctorIdInput = document.getElementById("doctorId");
+
+      if (role === "doctor") {
+        doctorIdField.style.display = "block";
+        doctorIdInput.value = generateDoctorId();
+      } else {
+        doctorIdField.style.display = "none";
+        doctorIdInput.value = "";
+      }
+    }
+
+    function generateDoctorId() {
+      return 'DOC-' + Math.random().toString(36).substr(2, 6).toUpperCase();
+    }
+  </script>
 
 </body>
 </html>
