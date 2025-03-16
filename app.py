@@ -213,66 +213,32 @@ def add_operation():
         flash('Unauthorized access!', 'danger')
         return redirect(url_for('login'))
     
-    if request.method == 'POST':
-        doctor_name = request.form['doctor_name']
-        hospital_name = request.form['hospital_name']
-        patient_name = request.form['patient_name']
-        patient_age = request.form['patient_age']
-        operation_names = request.form['operation_names']
-        operation_date = request.form['operation_date']
-        description = request.form['description']
-        
-        # Handle file uploads if present
-        files_uploaded = ""
-        prescription_file = ""
-        
-        if 'files_uploaded' in request.files:
-            files = request.files.getlist('files_uploaded')
-            file_paths = []
-            for file in files:
-                if file and file.filename:
-                    filename = secure_filename(file.filename)
-                    timestamp = datetime.now().strftime("%Y%m%d%H%M%S")
-                    new_filename = f"{timestamp}_{filename}"
-                    file_path = os.path.join(app.config['UPLOAD_FOLDER'], new_filename)
-                    file.save(file_path)
-                    file_paths.append(new_filename)
-            files_uploaded = ",".join(file_paths)
-        
-        if 'prescription_file' in request.files and request.files['prescription_file'].filename:
-            file = request.files['prescription_file']
-            filename = secure_filename(file.filename)
-            timestamp = datetime.now().strftime("%Y%m%d%H%M%S")
-            new_filename = f"prescription_{timestamp}_{filename}"
-            file_path = os.path.join(app.config['UPLOAD_FOLDER'], new_filename)
-            file.save(file_path)
-            prescription_file = new_filename
-        
-        # Save to database (patient_id removed to match the table schema)
-        conn = get_db_connection()
-        if conn:
-            try:
-                with conn.cursor() as cursor:
-                    cursor.execute("""
-                        INSERT INTO operation_treatment_info 
-                        (doctor_name, hospital_name, patient_name, patient_age, operation_names, 
-                        files_uploaded, operation_date, description, prescription_file) 
-                        VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s)
-                    """, (
-                        doctor_name, hospital_name, patient_name, patient_age, operation_names,
-                        files_uploaded, operation_date, description, prescription_file
-                    ))
-                    conn.commit()
-                    
-                flash('Treatment information added successfully!', 'success')
-            except Exception as e:
-                flash(f'Error adding treatment information: {e}', 'danger')
-            finally:
-                conn.close()
-        else:
-            flash('Database connection failed!', 'danger')
-        
-        return redirect(url_for('dashboard'))
+    patient_id = current_user.id  # Get current patient ID
+    doctor_name = request.form['doctor_name']
+    hospital_name = request.form['hospital_name']
+    patient_name = current_user.username  # Automatically use logged-in user's name
+    patient_age = request.form['patient_age']
+    operation_names = request.form['operation_names']
+    operation_date = request.form['operation_date']
+    description = request.form['description']
+
+    conn = get_db_connection()
+    if conn:
+        try:
+            with conn.cursor() as cursor:
+                cursor.execute("""
+                    INSERT INTO operation_treatment_info 
+                    (doctor_name, hospital_name, patient_name, patient_age, operation_names, operation_date, description, patient_id) 
+                    VALUES (%s, %s, %s, %s, %s, %s, %s, %s)
+                """, (doctor_name, hospital_name, patient_name, patient_age, operation_names, operation_date, description, patient_id))
+                conn.commit()
+            flash('Operation details added successfully!', 'success')
+        except Exception as e:
+            flash(f'Error adding operation details: {e}', 'danger')
+        finally:
+            conn.close()
+    return redirect(url_for('dashboard'))
+
 
 # 🟢 Search Patient API for Doctor Dashboard
 @app.route('/search_patient', methods=['POST'])
@@ -284,61 +250,52 @@ def search_patient():
     patient_id = request.form.get('patient_id')
     if not patient_id:
         return jsonify({'error': 'Patient ID is required'}), 400
-    
+
     conn = get_db_connection()
     if conn:
         try:
-            # Get patient details
             with conn.cursor() as cursor:
                 cursor.execute("""
-                    SELECT id, username, gender, dob, phone, blood_group 
-                    FROM users WHERE id = %s AND role = 'patient'
+                    SELECT u.id AS patient_id, u.username AS patient_name, u.role, 
+                           o.id AS operation_id, o.doctor_name, o.hospital_name, 
+                           o.patient_age, o.operation_names, o.operation_date, o.description
+                    FROM users u
+                    LEFT JOIN operation_treatment_info o ON u.id = o.patient_id
+                    WHERE u.id = %s AND u.role = 'patient'
+                    ORDER BY o.operation_date DESC;
                 """, (patient_id,))
-                patient = cursor.fetchone()
-            
-            if not patient:
-                return jsonify({'error': 'Patient not found'}), 404
-            
-            # Calculate age from DOB if available
-            age = None
-            if patient.get('dob'):
-                dob = datetime.strptime(patient['dob'], '%Y-%m-%d')
-                today = datetime.today()
-                age = today.year - dob.year - ((today.month, today.day) < (dob.month, dob.day))
-            
-            # Fetch treatment history by matching the patient name
-            treatments = []
-            with conn.cursor() as cursor:
-                cursor.execute("""
-                    SELECT * FROM operation_treatment_info
-                    WHERE patient_name = %s
-                    ORDER BY operation_date DESC
-                """, (patient['username'],))
-                treatments = cursor.fetchall()
-            
-            # Convert datetime objects to strings for JSON serialization
-            for treatment in treatments:
-                if 'operation_date' in treatment and treatment['operation_date']:
-                    treatment['operation_date'] = treatment['operation_date'].strftime('%Y-%m-%d')
-            
-            return jsonify({
-                'patient': {
-                    'id': patient['id'],
-                    'name': patient['username'],
-                    'gender': patient.get('gender'),
-                    'dob': patient.get('dob'),
-                    'phone': patient.get('phone'),
-                    'blood_group': patient.get('blood_group'),
-                    'age': age
-                },
-                'treatments': treatments
-            })
+                
+                results = cursor.fetchall()
+
+                if not results:
+                    return jsonify({'error': 'Patient not found or no records'}), 404
+
+                patient_info = {
+                    'id': results[0]['patient_id'],
+                    'name': results[0]['patient_name'],
+                    'role': results[0]['role'],
+                }
+
+                treatments = [
+                    {
+                        'doctor_name': row['doctor_name'],
+                        'hospital_name': row['hospital_name'],
+                        'patient_age': row['patient_age'],
+                        'operation_names': row['operation_names'],
+                        'operation_date': row['operation_date'].strftime('%Y-%m-%d') if row['operation_date'] else None,
+                        'description': row['description']
+                    }
+                    for row in results if row['operation_id'] is not None
+                ]
+
+                return jsonify({'patient': patient_info, 'treatments': treatments})
+
         except Exception as e:
-            return jsonify({'error': f'Error fetching patient data: {e}'}), 500
+            return jsonify({'error': f'Error fetching data: {e}'}), 500
         finally:
             conn.close()
-    else:
-        return jsonify({'error': 'Database connection failed'}), 500
+    
+    return jsonify({'error': 'Database connection failed'}), 500
 
 # 🟢 Add Treatment by Doctor
 @app.route('/add_treatment', methods=['POST'])
