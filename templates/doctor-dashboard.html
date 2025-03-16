@@ -1,3 +1,4 @@
+doctor-dashboard.html
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -65,6 +66,56 @@
     .hidden {
       display: none;
     }
+
+    .treatment-history {
+      margin-top: 2rem;
+      border-top: 1px solid #eee;
+      padding-top: 1rem;
+    }
+
+    .treatment-card {
+      background-color: #f9f9f9;
+      border-radius: 5px;
+      padding: 1rem;
+      margin-bottom: 1rem;
+      border-left: 4px solid #4CAF50;
+    }
+
+    .treatment-card h4 {
+      margin-top: 0;
+      color: #2c3e50;
+    }
+
+    .treatment-card p {
+      margin: 5px 0;
+      font-size: 14px;
+    }
+
+    .treatment-card .date {
+      font-style: italic;
+      color: #777;
+    }
+
+    .treatment-card .description {
+      margin-top: 10px;
+      padding-top: 10px;
+      border-top: 1px dashed #ccc;
+    }
+
+    .logout-btn {
+      background-color: #e74c3c;
+      color: white;
+      padding: 0.5rem 1rem;
+      border: none;
+      border-radius: 4px;
+      cursor: pointer;
+      text-decoration: none;
+      font-weight: bold;
+    }
+
+    .logout-btn:hover {
+      background-color: #c0392b;
+    }
   </style>
 </head>
 <body>
@@ -72,7 +123,10 @@
   <!-- Top Bar / Welcome Message -->
   <div class="top-bar">
     <h1 id="doctorWelcome">Welcome, Dr. {{ user.username }}</h1>
-    <p><strong>Doctor ID:</strong> {{ user.doctor_id }}</p>
+    <div>
+      <p><strong>Doctor ID:</strong> {{ user.doctor_id }}</p>
+      <a href="/logout" class="logout-btn">Logout</a>
+    </div>
   </div>
 
   <!-- Main Container -->
@@ -81,10 +135,10 @@
     <!-- Search Patient by ID -->
     <section>
       <h2>Search Patient</h2>
-      <form id="searchPatientForm" style="display:flex; gap:1rem; align-items:flex-end;">
+      <form id="searchPatientForm" action="/search_patient" method="POST" style="display:flex; gap:1rem; align-items:flex-end;">
         <div style="flex:1;">
           <label for="searchPatientId">Patient ID:</label>
-          <input type="text" id="searchPatientId" required>
+          <input type="text" id="searchPatientId" name="patient_id" required>
         </div>
         <button type="submit">Search</button>
       </form>
@@ -96,116 +150,273 @@
       <h2>Patient Details</h2>
 
       <!-- Basic Patient Info -->
-      <form id="patientDetailsForm" style="display:grid; grid-template-columns:1fr 1fr; gap:1rem;">
+      <div style="display:grid; grid-template-columns:1fr 1fr; gap:1rem;">
         <div>
           <div class="form-group">
             <label for="patientName">Patient Name:</label>
-            <input type="text" id="patientName">
+            <input type="text" id="patientName" readonly>
           </div>
 
           <div class="form-group">
             <label for="patientAge">Age:</label>
-            <input type="number" id="patientAge">
+            <input type="number" id="patientAge" readonly>
           </div>
 
           <div class="form-group">
-            <label for="patientDisease">Disease(s):</label>
-            <input type="text" id="patientDisease" placeholder="e.g., Diabetes, Hypertension">
+            <label for="patientId">Patient ID:</label>
+            <input type="text" id="patientId" readonly style="background:#eee;">
           </div>
         </div>
 
         <div>
           <div class="form-group">
-            <label for="patientIdField">Patient ID:</label>
-            <input type="text" id="patientIdField" disabled style="background:#eee;">
+            <label for="patientGender">Gender:</label>
+            <input type="text" id="patientGender" readonly>
           </div>
 
           <div class="form-group">
-            <label for="notes">Notes / Issues:</label>
-            <textarea id="notes" rows="5"></textarea>
+            <label for="patientBloodGroup">Blood Group:</label>
+            <input type="text" id="patientBloodGroup" readonly>
+          </div>
+
+          <div class="form-group">
+            <label for="patientPhone">Phone:</label>
+            <input type="text" id="patientPhone" readonly>
           </div>
         </div>
-      </form>
-
-      <!-- Medical Reports / Operation / Treatment Info -->
-      <h2 style="margin-top:2rem;">Medical Reports & Treatment</h2>
-      <form id="reportsForm" style="display:grid; grid-template-columns:1fr 1fr; gap:1rem;">
-        <div>
-          <div class="form-group">
-            <label for="hospitalName">Hospital Name:</label>
-            <select id="hospitalName">
-              <option value="">Select Hospital</option>
-              <option value="Hospital A">Hospital A</option>
-              <option value="Hospital B">Hospital B</option>
-              <option value="Hospital C">Hospital C</option>
-            </select>
-          </div>
-
-          <div class="form-group">
-            <label for="diseaseType">Disease Type:</label>
-            <select id="diseaseType">
-              <option value="">Select Disease</option>
-              <option value="Disease X">Disease X</option>
-              <option value="Disease Y">Disease Y</option>
-              <option value="Disease Z">Disease Z</option>
-            </select>
-          </div>
-
-          <div class="form-group">
-            <label for="operationName">Operation/Treatment Name:</label>
-            <input type="text" id="operationName">
-          </div>
-        </div>
-
-        <div>
-          <div class="form-group">
-            <label for="dateOfOperation">Date of Operation:</label>
-            <input type="date" id="dateOfOperation">
-          </div>
-
-          <div class="form-group">
-            <label for="prescriptionUpload">Prescription Upload:</label>
-            <input type="file" id="prescriptionUpload">
-          </div>
-
-          <div class="form-group">
-            <label for="reportNotes">Additional Info:</label>
-            <textarea id="reportNotes" rows="3"></textarea>
-          </div>
-        </div>
-      </form>
-
-      <div style="margin-top:1rem;">
-        <button id="updateDetailsBtn">Update Details</button>
       </div>
 
-      <div id="updateMessage" style="margin-top:1rem; color:#555;"></div>
-    </section>
+      <!-- Treatment History Section -->
+      <div class="treatment-history">
+        <h2>Treatment History</h2>
+        <div id="treatmentHistoryContainer">
+          <!-- Treatment history will be loaded here -->
+          <p id="noTreatmentsMessage" style="display:none;">No treatment history found for this patient.</p>
+        </div>
+      </div>
 
+      <!-- Add New Treatment Section -->
+      <div style="margin-top:2rem;">
+        <h2>Add New Treatment</h2>
+        <form id="addTreatmentForm" action="/add_treatment" method="POST">
+          <input type="hidden" id="treatmentPatientId" name="patient_id">
+          
+          <div style="display:grid; grid-template-columns:1fr 1fr; gap:1rem;">
+            <div>
+              <div class="form-group">
+                <label for="treatmentDoctorName">Doctor Name:</label>
+                <input type="text" id="treatmentDoctorName" name="doctor_name" value="Dr. {{ user.username }}" readonly>
+              </div>
+
+              <div class="form-group">
+                <label for="treatmentHospitalName">Hospital Name:</label>
+                <select id="treatmentHospitalName" name="hospital_name" required>
+                  <option value="">Select Hospital</option>
+                  <option value="General Hospital">General Hospital</option>
+                  <option value="City Medical Center">City Medical Center</option>
+                  <option value="Memorial Hospital">Memorial Hospital</option>
+                  <option value="Other">Other</option>
+                </select>
+              </div>
+
+              <div class="form-group" id="otherHospitalGroup" style="display:none;">
+                <label for="otherHospitalName">Specify Hospital:</label>
+                <input type="text" id="otherHospitalName" name="other_hospital_name">
+              </div>
+
+              <div class="form-group">
+                <label for="treatmentPatientName">Patient Name:</label>
+                <input type="text" id="treatmentPatientName" name="patient_name" readonly>
+              </div>
+            </div>
+
+            <div>
+              <div class="form-group">
+                <label for="treatmentPatientAge">Patient Age:</label>
+                <input type="number" id="treatmentPatientAge" name="patient_age" readonly>
+              </div>
+
+              <div class="form-group">
+                <label for="treatmentOperationNames">Operation/Treatment Name(s):</label>
+                <input type="text" id="treatmentOperationNames" name="operation_names" placeholder="If more than one, separate them with '+'" required>
+              </div>
+
+              <div class="form-group">
+                <label for="treatmentDate">Date of Operation/Treatment:</label>
+                <input type="date" id="treatmentDate" name="operation_date" required>
+              </div>
+            </div>
+          </div>
+
+          <div class="form-group">
+            <label for="treatmentDescription">Description/Notes:</label>
+            <textarea id="treatmentDescription" name="description" rows="4" required></textarea>
+          </div>
+
+          <div class="form-group">
+            <label for="treatmentPrescription">Prescription:</label>
+            <textarea id="treatmentPrescription" name="prescription" rows="4" placeholder="Enter prescription details here"></textarea>
+          </div>
+
+          <button type="submit">Add Treatment</button>
+        </form>
+        <div id="addTreatmentMessage" style="margin-top:1rem; color:#555;"></div>
+      </div>
+    </section>
   </div>
 
   <script>
-    document.getElementById("searchPatientForm").addEventListener("submit", function(event) {
-      event.preventDefault();
-      let patientId = document.getElementById("searchPatientId").value.trim();
-      
-      if (patientId === "P1234") { // Example ID for testing
-        document.getElementById("patientSection").style.display = "block";
-        document.getElementById("searchMessage").innerHTML = "<span style='color: green;'>Patient found!</span>";
-        document.getElementById("patientIdField").value = patientId;
-        document.getElementById("patientName").value = "John Doe";
-        document.getElementById("patientAge").value = "35";
-        document.getElementById("patientDisease").value = "Hypertension";
+    // For hospital dropdown
+    document.getElementById("treatmentHospitalName").addEventListener("change", function() {
+      const otherHospitalGroup = document.getElementById("otherHospitalGroup");
+      if (this.value === "Other") {
+        otherHospitalGroup.style.display = "block";
       } else {
-        document.getElementById("searchMessage").innerHTML = "<span style='color: red;'>Patient not found!</span>";
-        document.getElementById("patientSection").style.display = "none";
+        otherHospitalGroup.style.display = "none";
       }
     });
 
-    document.getElementById("updateDetailsBtn").addEventListener("click", function() {
-      document.getElementById("updateMessage").innerHTML = "<span style='color: green;'>Patient details updated successfully!</span>";
+    // For form submission
+    document.getElementById("searchPatientForm").addEventListener("submit", function(event) {
+      event.preventDefault();
+      const patientId = document.getElementById("searchPatientId").value.trim();
+      
+      // Simulate AJAX request to search patient
+      fetchPatientData(patientId);
     });
-  </script>
 
+    document.getElementById("addTreatmentForm").addEventListener("submit", function(event) {
+      event.preventDefault();
+      // Simulate AJAX request to add treatment
+      addTreatment();
+    });
+
+    function fetchPatientData(patientId) {
+      // In a real application, this would be an AJAX call to your backend
+      // For demonstration, we'll simulate a successful response
+      
+      // Loading state
+      document.getElementById("searchMessage").innerHTML = "Searching...";
+      
+      // Simulate network delay
+      setTimeout(() => {
+        if (patientId) {
+          document.getElementById("searchMessage").innerHTML = "<span style='color:green;'>Patient found!</span>";
+          document.getElementById("patientSection").classList.remove("hidden");
+          
+          // Populate patient details
+          document.getElementById("patientId").value = patientId;
+          document.getElementById("patientName").value = "John Doe"; // This would come from your backend
+          document.getElementById("patientAge").value = "35";
+          document.getElementById("patientGender").value = "Male";
+          document.getElementById("patientBloodGroup").value = "O+";
+          document.getElementById("patientPhone").value = "555-1234";
+          
+          // Set values for treatment form
+          document.getElementById("treatmentPatientId").value = patientId;
+          document.getElementById("treatmentPatientName").value = "John Doe";
+          document.getElementById("treatmentPatientAge").value = "35";
+          
+          // Fetch treatment history
+          fetchTreatmentHistory(patientId);
+        } else {
+          document.getElementById("searchMessage").innerHTML = "<span style='color:red;'>Patient not found!</span>";
+          document.getElementById("patientSection").classList.add("hidden");
+        }
+      }, 500);
+    }
+
+    function fetchTreatmentHistory(patientId) {
+      // In a real application, this would be an AJAX call to your backend
+      // For demonstration, we'll simulate a successful response with some sample data
+      
+      const treatmentHistoryContainer = document.getElementById("treatmentHistoryContainer");
+      const noTreatmentsMessage = document.getElementById("noTreatmentsMessage");
+      
+      // Clear previous content
+      treatmentHistoryContainer.innerHTML = "";
+      treatmentHistoryContainer.appendChild(noTreatmentsMessage);
+      
+      // Simulate network delay
+      setTimeout(() => {
+        // Sample treatment data - in a real app, this would come from your database
+        const treatments = [
+          {
+            id: 1,
+            doctor_name: "Dr. Smith",
+            hospital_name: "General Hospital",
+            operation_names: "Appendectomy",
+            operation_date: "2023-05-15",
+            description: "Appendix removal surgery. Patient recovered well with no complications."
+          },
+          {
+            id: 2,
+            doctor_name: "Dr. Johnson",
+            hospital_name: "City Medical Center",
+            operation_names: "X-Ray + Blood Test",
+            operation_date: "2023-08-22",
+            description: "Diagnostic tests following complaints of chest pain. Results showed no abnormalities."
+          }
+        ];
+        
+        if (treatments.length > 0) {
+          noTreatmentsMessage.style.display = "none";
+          
+          treatments.forEach(treatment => {
+            const treatmentCard = document.createElement("div");
+            treatmentCard.className = "treatment-card";
+            
+            treatmentCard.innerHTML = `
+              <h4>${treatment.operation_names}</h4>
+              <p><strong>Doctor:</strong> ${treatment.doctor_name}</p>
+              <p><strong>Hospital:</strong> ${treatment.hospital_name}</p>
+              <p class="date"><strong>Date:</strong> ${formatDate(treatment.operation_date)}</p>
+              <div class="description">
+                <p><strong>Description:</strong></p>
+                <p>${treatment.description}</p>
+              </div>
+            `;
+            
+            treatmentHistoryContainer.appendChild(treatmentCard);
+          });
+        } else {
+          noTreatmentsMessage.style.display = "block";
+        }
+      }, 700);
+    }
+
+    function addTreatment() {
+      // In a real application, this would be an AJAX call to your backend
+      // For demonstration, we'll simulate a successful response
+      
+      const addTreatmentMessage = document.getElementById("addTreatmentMessage");
+      
+      // Loading state
+      addTreatmentMessage.innerHTML = "Adding treatment...";
+      addTreatmentMessage.style.color = "#555";
+      
+      // Simulate network delay
+      setTimeout(() => {
+        addTreatmentMessage.innerHTML = "Treatment added successfully!";
+        addTreatmentMessage.style.color = "green";
+        
+        // Clear form (in a real app, you might want to keep some fields)
+        document.getElementById("treatmentOperationNames").value = "";
+        document.getElementById("treatmentDate").value = "";
+        document.getElementById("treatmentDescription").value = "";
+        document.getElementById("treatmentPrescription").value = "";
+        
+        // Refresh treatment history
+        const patientId = document.getElementById("treatmentPatientId").value;
+        fetchTreatmentHistory(patientId);
+      }, 1000);
+    }
+
+    function formatDate(dateString) {
+      const options = { year: 'numeric', month: 'long', day: 'numeric' };
+      return new Date(dateString).toLocaleDateString(undefined, options);
+    }
+  </script>
 </body>
 </html>
+

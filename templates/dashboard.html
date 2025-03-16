@@ -1,3 +1,4 @@
+dashboard.html
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -41,16 +42,20 @@
     }
 
     .card {
-      background: white;
-      padding: 1.5rem;
+      background-color: white;
+      padding: 15px;
       border-radius: 10px;
-      box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
-      transition: transform 0.3s ease-in-out;
+      box-shadow: 0px 0px 10px rgba(0, 0, 0, 0.1);
     }
-
-    .card:hover {
-      transform: scale(1.05);
+    .card-title {
+      font-weight: bold;
     }
+    .card-body p {
+      margin: 5px 0;
+      font-size: 14px;
+      color: #333;
+    }
+    
 
     h2 {
       margin-bottom: 1rem;
@@ -85,6 +90,57 @@
       border: 1px solid #ccc;
       border-radius: 5px;
     }
+
+    .edit-profile {
+      text-align: center;
+      margin-top: 10px;
+      color: #3498db;
+      cursor: pointer;
+      text-decoration: underline;
+    }
+
+    /* Daily Activities - Updated Styling */
+    .daily-activities {
+      background: white; /* Matching other boxes */
+      padding: 1.5rem;
+      border-radius: 10px;
+      box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+      transition: transform 0.3s ease-in-out;
+    }
+
+    .daily-activities:hover {
+      transform: scale(1.05);
+    }
+
+    .checkbox-list {
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+
+    .checkbox-list label {
+      display: flex;
+      align-items: center;
+      font-size: 1rem;
+      cursor: pointer;
+    }
+
+    .checkbox-list input {
+      margin-right: 10px;
+      transform: scale(1.2); /* Enlarges checkboxes */
+    }
+
+    .success-message {
+      color: green;
+      margin-top: 10px;
+      font-weight: bold;
+    }
+
+    .error-message {
+      color: red;
+      margin-top: 10px;
+      font-weight: bold;
+    }
   </style>
 </head>
 <body>
@@ -92,12 +148,64 @@
   <div class="top-bar">Welcome, {{ user.username }}!</div>
 
   <div class="container">
+    <!-- Profile Section -->
     <div class="card" style="text-align: center;">
       <h2>Profile</h2>
       <img src="https://th.bing.com/th/id/OIP.tvaMwK3QuFxhTYg4PSNNVAHaHa?rs=1&pid=ImgDetMain" alt="Profile" class="profile-img">
       <p>Name: <strong>{{ user.username }}</strong></p>
       <p>Patient ID: <strong>{{ user.id }}</strong></p>
+      <p>Gender: <strong>{{ user.gender }}</strong></p>
+      <p>DOB: <strong>{{ user.dob }}</strong></p>
+      <p>Phone: <strong>{{ user.phone }}</strong></p>
+      <p>Blood Group: <strong>{{ user.blood_group }}</strong></p>
+      <div class="edit-profile" onclick="toggleEditProfile()">Edit Profile</div>
     </div>
+
+    <!-- Edit Profile Form -->
+    <div class="card" id="editProfileForm" style="display: none;">
+      <h2>Edit Profile</h2>
+      <label>Name:</label>
+      <input type="text" placeholder="Enter your name">
+
+      <label>Gender:</label>
+      <select>
+        <option>Male</option>
+        <option>Female</option>
+        <option>Other</option>
+      </select>
+
+      <label>Date of Birth:</label>
+      <input type="date">
+
+      <label>Phone No:</label>
+      <input type="text" placeholder="Enter phone number">
+
+      <label>Blood Group:</label>
+      <select>
+        <option>A+</option>
+        <option>A-</option>
+        <option>B+</option>
+        <option>B-</option>
+        <option>O+</option>
+        <option>O-</option>
+        <option>AB+</option>
+        <option>AB-</option>
+      </select>
+
+      <button class="button">Save Changes</button>
+    </div>
+
+    <!-- Daily Activities Section (Updated) -->
+    <div class="card">
+      <div class="card-body">
+          <h5 class="card-title"><b>Daily Activities</b></h5>
+          <p>✔ Drink 8 glasses of water</p>
+          <p>✔ Get fresh air outside</p>
+          <p>✔ Home workout</p>
+          <p>✔ Read a book</p>
+      </div>
+    </div>
+  
 
     <div class="card">
       <h2>Medical History</h2>
@@ -116,16 +224,61 @@
       <button class="button">Upload</button>
     </div>
 
-    <div class="card" style="grid-column: 1 / -1;">
+    <!-- Operation / Treatment Info -->
+    <div class="card form-section" style="grid-column: 1 / -1;">
       <h2>Operation / Treatment Info</h2>
-      <input type="text" placeholder="Doctor Name">
-      <input type="text" placeholder="Hospital Name">
-      <input type="text" placeholder="Operation Name">
-      <input type="date">
-      <textarea placeholder="Description" rows="3"></textarea>
-      <button class="button">Submit</button>
+      
+      <form id="operationForm" action="/add_operation" method="POST" enctype="multipart/form-data">
+        <label>Doctor Name:</label>
+        <input type="text" name="doctor_name" required>
+    
+        <label>Hospital Name:</label>
+        <input type="text" name="hospital_name" required>
+    
+        <label>Patient Name:</label>
+        <input type="text" name="patient_name" value="{{ user.username }}" readonly>
+    
+        <label>Age of Patient:</label>
+        <input type="number" name="patient_age" required>
+    
+        <label>Operation Name(s):</label>
+        <input type="text" name="operation_names" required>
+    
+        <label>Files Upload:</label>
+        <input type="file" name="files_uploaded">
+    
+        <label>Date of Operation:</label>
+        <input type="date" name="operation_date" required>
+    
+        <label>Description:</label>
+        <textarea name="description" required></textarea>
+    
+        <label>Prescription:</label>
+        <input type="file" name="prescription_file">
+    
+        <button type="submit">Submit</button>
+    </form>
+    
     </div>
+
   </div>
+
+  <script>
+    function toggleEditProfile() {
+      var form = document.getElementById("editProfileForm");
+      form.style.display = form.style.display === "none" ? "block" : "none";
+    }
+
+    // For operation form submission
+    document.getElementById("operationForm").addEventListener("submit", function(event) {
+      // This will be handled by the server-side form submission
+      // But we could add client-side validation here
+      setTimeout(function() {
+        document.getElementById("operationMessage").style.display = "block";
+        document.getElementById("operationMessage").textContent = "Operation details submitted successfully!";
+      }, 500);
+    });
+  </script>
 
 </body>
 </html>
