@@ -111,7 +111,7 @@ def logout():
     flash('Logged out successfully!', 'success')
     return redirect(url_for('home'))
 
-# 🟢 Registration Route (Doctors Enter Custom ID)
+# 🟢 Registration Route (Doctors Use Auto-Generated ID)
 @app.route('/register', methods=['GET', 'POST'])
 def register():
     if request.method == 'POST':
@@ -127,11 +127,6 @@ def register():
         if conn:
             cursor = conn.cursor(dictionary=True)
 
-            # 🛑 Print all stored doctor IDs for debugging
-            cursor.execute("SELECT doctor_id FROM users WHERE role = 'doctor'")
-            all_doctors = cursor.fetchall()
-            print(f"🔴 Existing doctor IDs in DB: {[d['doctor_id'] for d in all_doctors]}")  # Debugging
-
             # 🛑 CHECK IF USERNAME ALREADY EXISTS
             cursor.execute("SELECT * FROM users WHERE username = %s", (username,))
             existing_user = cursor.fetchone()
@@ -140,16 +135,21 @@ def register():
                 conn.close()
                 return redirect(url_for('register'))
 
-            # ✅ Allow Doctors to Enter Their Own `doctor_id`
+            # ✅ Process doctor_id for doctors
             doctor_id = None
             if role == "doctor":
                 doctor_id = request.form['doctorId'].strip().upper()  # Ensure uppercase & no spaces
+                
+                if not doctor_id:
+                    flash('Doctor ID is missing!', 'danger')
+                    conn.close()
+                    return redirect(url_for('register'))
 
                 # Check if doctor_id already exists
                 cursor.execute("SELECT * FROM users WHERE doctor_id = %s", (doctor_id,))
                 existing_doctor = cursor.fetchone()
                 if existing_doctor:
-                    flash('Doctor ID already exists! Choose a different one.', 'danger')
+                    flash('Doctor ID already exists! Please try again with a new ID.', 'danger')
                     conn.close()
                     return redirect(url_for('register'))
 
@@ -159,11 +159,6 @@ def register():
                 VALUES (%s, %s, %s, %s)
             """, (username, password, role, doctor_id))
             conn.commit()
-
-            # ✅ Fetch stored doctor ID again for verification
-            cursor.execute("SELECT doctor_id FROM users WHERE username = %s", (username,))
-            stored_id = cursor.fetchone()["doctor_id"]
-            print(f"🟢 STORED Doctor ID in DB (After Insert): {stored_id}")  # Debugging
 
             conn.close()
             flash('Registration successful! You can now log in.', 'success')
