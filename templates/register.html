@@ -137,9 +137,9 @@
         <input type="text" id="username" name="username" required>
       </div>
 
-      <!-- Aadhar Number Field -->
+      <!-- Password Field -->
       <div class="form-group">
-        <label for="password">AADHAR NUMBER:</label>
+        <label for="password">Password:</label>
         <input type="password" id="password" name="password" required>
       </div>
 
@@ -168,6 +168,14 @@
   </div>
 
   <script>
+    // Generate doctor ID when the form loads
+    document.addEventListener('DOMContentLoaded', function() {
+      // Check if role is already set to doctor (in case of page refresh)
+      if (document.getElementById("role").value === "doctor") {
+        toggleDoctorIdField();
+      }
+    });
+    
     function toggleDoctorIdField() {
       var role = document.getElementById("role").value;
       var doctorIdField = document.getElementById("doctorIdField");
